@@ -37,7 +37,7 @@ class GetRandomCommand : VerifyingCommand(), Callable<Unit> {
                 throw GeneralSecurityException("Key hash in attestation report doesn't match the hash of the claimed enclave key")
             }
 
-            val signatureSchemeFactory = Crypto.getSignatureSchemeFactory(SecureRandom.getInstance("SHA1PRNG"))
+            val signatureSchemeFactory = Crypto.getSignatureSchemeFactory()
             val eddsaScheme = signatureSchemeFactory.make(SchemesSettings.EDDSA_ED25519_SHA512)
             eddsaScheme.verify(
                     eddsaScheme.decodePublicKey(rngResponse.publicKey),

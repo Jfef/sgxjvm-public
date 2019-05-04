@@ -31,7 +31,7 @@ class RngEnclaveClientTest {
     fun testHost() {
         RngEnclaveletHostClient.withClient("localhost:$grpcPort") { client ->
             val rngResponse = client.getRandomBytes()
-            val signatureSchemeFactory = Crypto.getSignatureSchemeFactory(SecureRandom.getInstance("SHA1PRNG"))
+            val signatureSchemeFactory = Crypto.getSignatureSchemeFactory()
             val eddsaScheme = signatureSchemeFactory.make(SchemesSettings.EDDSA_ED25519_SHA512)
             eddsaScheme.verify(
                 eddsaScheme.decodePublicKey(rngResponse.publicKey),

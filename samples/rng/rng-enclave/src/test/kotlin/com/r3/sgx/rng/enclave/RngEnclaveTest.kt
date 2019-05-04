@@ -129,7 +129,7 @@ class RngEnclaveTest {
         val signatureSize = responseBytes.int
         val signature = ByteArray(signatureSize)
         responseBytes.get(signature)
-        val signatureSchemeFactory = Crypto.getSignatureSchemeFactory(SecureRandom.getInstance("SHA1PRNG"))
+        val signatureSchemeFactory = Crypto.getSignatureSchemeFactory()
         val eddsaScheme = signatureSchemeFactory.make(SchemesSettings.EDDSA_ED25519_SHA512)
         eddsaScheme.verify(
                 publicKey = eddsaScheme.decodePublicKey(publicKey),
