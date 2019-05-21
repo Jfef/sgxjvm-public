@@ -9,7 +9,6 @@ import org.junit.Test
 import java.io.File
 import java.nio.ByteBuffer
 import java.security.MessageDigest
-import java.security.SecureRandom
 import kotlin.test.assertEquals
 
 class RngEnclaveTest {
@@ -87,7 +86,7 @@ class RngEnclaveTest {
         // handler that records the binary blobs sent by the enclave.
         val handler = BytesRecordingHandler()
         // Now open the channel itself.
-        val channel = enclave.connection.channels.addDownstream(0, handler)
+        val (channelId, channel) = enclave.connection.channels.addDownstream(handler).get()
         val message = ByteBuffer.allocate(4)
         val requestedRandomBytesSize = 256
         message.putInt(requestedRandomBytesSize)
@@ -111,8 +110,8 @@ class RngEnclaveTest {
         // HOST:    handler.receive    -- the receive function in the handler we created for the channel
         //
         // Therefore when the above send() returns we will have already received the reply, recorded in handler.ocalls.
-        assertEquals(1, handler.ocalls.size)
-        val responseBytes = handler.ocalls.first()
+        assertEquals(1, handler.size)
+        val responseBytes = handler.nextCall
         val randomBytesSize = responseBytes.int
         assertEquals(requestedRandomBytesSize, randomBytesSize)
         val randomBytes = ByteArray(randomBytesSize)
@@ -138,6 +137,6 @@ class RngEnclaveTest {
         )
 
         // Close the channel.
-        enclave.connection.channels.removeDownstream(0)
+        enclave.connection.channels.removeDownstream(channelId)
     }
 }
