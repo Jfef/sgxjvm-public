@@ -45,7 +45,7 @@ class RngEnclaveTest {
 
         // Create the enclave itself, setting up the host with EnclaveletHostHandler(), which mirrors RngEnclave's
         // handler tree.
-        val handler = EnclaveletHostHandler(attestationConfiguration, exposeErrorsToEnclave = true)
+        val handler = EnclaveletHostHandler(attestationConfiguration)
         enclave = hostApi.createEnclave(handler, enclaveFile)
     }
 
