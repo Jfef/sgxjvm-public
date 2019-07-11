@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.r3.sgx.core.common.Cursor
 import com.r3.sgx.core.common.SgxQuote
-import com.r3.sgx.enclavelethost.client.ias.ReportResponse
 import com.r3.sgx.enclavelethost.grpc.GetEpidAttestationResponse
+import com.r3.sgx.enclavelethost.ias.schemas.ReportResponse
 import picocli.CommandLine
 import java.io.StringWriter
 import java.nio.ByteBuffer
