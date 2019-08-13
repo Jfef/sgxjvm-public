@@ -1,8 +1,11 @@
 package com.r3.sgx.rng.enclave
 
-import com.r3.sgx.core.common.SchemesSettings
-import com.r3.sgx.enclavelethost.client.Crypto
+import com.r3.sgx.core.common.attestation.AttestedSignatureVerifier
+import com.r3.sgx.core.common.attestation.PublicKeyAttester
+import com.r3.sgx.core.common.crypto.SignatureSchemeId
+import com.r3.sgx.enclavelethost.client.EpidAttestationVerificationBuilder
 import com.r3.sgx.rng.client.common.RngEnclaveletHostClient
+import com.r3.sgx.testing.MockAttestationCertStore
 import org.junit.BeforeClass
 import org.junit.Test
 import org.slf4j.Logger
@@ -30,10 +33,17 @@ class RngEnclaveClientTest {
     fun testHost() {
         RngEnclaveletHostClient.withClient("localhost:$grpcPort") { client ->
             val rngResponse = client.getRandomBytes()
-            val signatureSchemeFactory = Crypto.getSignatureSchemeFactory()
-            val eddsaScheme = signatureSchemeFactory.make(SchemesSettings.EDDSA_ED25519_SHA512)
-            eddsaScheme.verify(
-                eddsaScheme.decodePublicKey(rngResponse.publicKey),
+            val attestation = client.getAttestation().attestation!!
+            val attestationVerifier = EpidAttestationVerificationBuilder()
+                    .withAcceptDebug(true)
+                    .build()
+            val attestedQuote = attestationVerifier.verify(MockAttestationCertStore.loadTestPkix(), attestation)
+            val keyAuthenticator = PublicKeyAttester(attestedQuote)
+            val enclaveSignatureVerifier = AttestedSignatureVerifier(
+                    SignatureSchemeId.EDDSA_ED25519_SHA512,
+                    keyAuthenticator)
+            enclaveSignatureVerifier.verify(
+                enclaveSignatureVerifier.decodeAttestedKey(rngResponse.publicKey),
                 rngResponse.signature,
                 rngResponse.randomBytes
             )

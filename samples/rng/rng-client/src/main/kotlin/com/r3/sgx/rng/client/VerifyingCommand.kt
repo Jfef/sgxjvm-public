@@ -2,6 +2,7 @@ package com.r3.sgx.rng.client
 
 import com.r3.sgx.core.common.Cursor
 import com.r3.sgx.core.common.SgxQuote
+import com.r3.sgx.core.common.attestation.AttestedOutput
 import com.r3.sgx.enclavelethost.client.EnclaveletMetadata
 import com.r3.sgx.enclavelethost.client.EpidAttestationVerificationBuilder
 import com.r3.sgx.enclavelethost.client.QuoteConstraint
@@ -36,7 +37,7 @@ open class VerifyingCommand {
     )
     var metadataFile: File? = null
 
-    fun verifyAttestation(attestation: EpidAttestation): Cursor<ByteBuffer, SgxQuote> {
+    fun verifyAttestation(attestation: EpidAttestation): AttestedOutput<Cursor<ByteBuffer, SgxQuote>> {
         val expectedMeasurement = EnclaveletMetadata.read(metadataFile!!).measurement
         val quoteConstraints = listOf(QuoteConstraint.ValidMeasurements(expectedMeasurement))
         val verification = EpidAttestationVerificationBuilder(quoteConstraints)

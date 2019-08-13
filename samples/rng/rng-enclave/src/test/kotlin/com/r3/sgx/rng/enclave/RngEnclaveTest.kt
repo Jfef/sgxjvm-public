@@ -1,9 +1,12 @@
 package com.r3.sgx.rng.enclave
 
 import com.r3.sgx.core.common.*
+import com.r3.sgx.core.common.attestation.AttestedSignatureVerifier
+import com.r3.sgx.core.common.attestation.PublicKeyAttester
+import com.r3.sgx.core.common.crypto.SignatureSchemeId
 import com.r3.sgx.core.host.*
-import com.r3.sgx.enclavelethost.client.Crypto
 import com.r3.sgx.testing.BytesRecordingHandler
+import com.r3.sgx.testing.TrustedSgxQuote
 import org.junit.Before
 import org.junit.Test
 import java.io.File
@@ -128,11 +131,13 @@ class RngEnclaveTest {
         val signatureSize = responseBytes.int
         val signature = ByteArray(signatureSize)
         responseBytes.get(signature)
-        val signatureSchemeFactory = Crypto.getSignatureSchemeFactory()
-        val eddsaScheme = signatureSchemeFactory.make(SchemesSettings.EDDSA_ED25519_SHA512)
-        eddsaScheme.verify(
-                publicKey = eddsaScheme.decodePublicKey(publicKey),
-                signatureData = signature,
+        val keyAuthenticator = PublicKeyAttester(TrustedSgxQuote.fromSignedQuote(signedQuote))
+        val enclaveSignatureVerifier = AttestedSignatureVerifier(
+                SignatureSchemeId.EDDSA_ED25519_SHA512,
+                keyAuthenticator)
+        enclaveSignatureVerifier.verify(
+                attestedPublicKey = enclaveSignatureVerifier.decodeAttestedKey(publicKey),
+                signature = signature,
                 clearData = randomBytes
         )
 

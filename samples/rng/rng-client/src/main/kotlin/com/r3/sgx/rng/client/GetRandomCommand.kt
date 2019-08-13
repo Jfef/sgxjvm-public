@@ -1,15 +1,12 @@
 package com.r3.sgx.rng.client
 
-import com.r3.sgx.core.common.SchemesSettings
-import com.r3.sgx.core.common.SgxQuote
-import com.r3.sgx.core.common.SgxReportBody
-import com.r3.sgx.enclavelethost.client.Crypto
+import com.r3.sgx.core.common.attestation.*
+import com.r3.sgx.core.common.crypto.SignatureSchemeId
 import com.r3.sgx.rng.client.common.RngEnclaveletHostClient
 import picocli.CommandLine
 import java.nio.ByteBuffer
 import java.security.GeneralSecurityException
 import java.security.MessageDigest
-import java.security.SecureRandom
 import java.util.*
 import java.util.concurrent.Callable
 
@@ -29,18 +26,19 @@ class GetRandomCommand : VerifyingCommand(), Callable<Unit> {
         RngEnclaveletHostClient.withClient(hostAddress) { client ->
             val attestation = client.getAttestation().attestation
             val quote = verifyAttestation(attestation)
-
             val rngResponse = client.getRandomBytes()
             val keyHash = MessageDigest.getInstance("SHA-512").digest(rngResponse.publicKey)
-            val keyHashInReport = quote[SgxQuote.reportBody][SgxReportBody.reportData].read()
+            val keyHashInReport = SgxQuoteReader(quote.data).reportData
             if (ByteBuffer.wrap(keyHash) != keyHashInReport) {
                 throw GeneralSecurityException("Key hash in attestation report doesn't match the hash of the claimed enclave key")
             }
 
-            val signatureSchemeFactory = Crypto.getSignatureSchemeFactory()
-            val eddsaScheme = signatureSchemeFactory.make(SchemesSettings.EDDSA_ED25519_SHA512)
-            eddsaScheme.verify(
-                    eddsaScheme.decodePublicKey(rngResponse.publicKey),
+            val keyAuthenticator = PublicKeyAttester(quote)
+            val enclaveSignatureVerifier = AttestedSignatureVerifier(
+                    SignatureSchemeId.EDDSA_ED25519_SHA512,
+                    keyAuthenticator)
+            enclaveSignatureVerifier.verify(
+                    enclaveSignatureVerifier.decodeAttestedKey(rngResponse.publicKey),
                     rngResponse.signature,
                     rngResponse.randomBytes
             )

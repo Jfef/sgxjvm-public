@@ -1,6 +1,8 @@
 package com.r3.sgx.rng.enclave
 
 import com.r3.sgx.core.common.*
+import com.r3.sgx.core.common.crypto.SignatureScheme
+import com.r3.sgx.core.common.crypto.SignatureSchemeId
 import com.r3.sgx.core.enclave.EnclaveApi
 import com.r3.sgx.core.enclave.Enclavelet
 import com.r3.sgx.core.enclave.EpidAttestationEnclaveHandler
@@ -74,7 +76,7 @@ class RngEnclave : Enclavelet() {
 
     override fun createReportData(api: EnclaveApi): Cursor<ByteBuffer, SgxReportData> {
         // Generate a key pair
-        signatureScheme = api.signatureSchemeFactory.make(SchemesSettings.EDDSA_ED25519_SHA512)
+        signatureScheme = api.getSignatureScheme(SignatureSchemeId.EDDSA_ED25519_SHA512)
         keyPair = signatureScheme.generateKeyPair()
         // Hash the public key, to be included in the report
         val keyDigest = MessageDigest.getInstance("SHA-512").digest(keyPair.public.encoded)
