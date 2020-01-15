@@ -16,7 +16,7 @@ then
     mkdir -p build
     # Check if python2.7 is installed explicitly otherwise fall back to the default python
     if type "python2.7" > /dev/null; then
-        virtualenv -p python2.7 "$absolutevirtualenv"
+        virtualenv -p python2.7 --no-setuptools "$absolutevirtualenv"
     else
         virtualenv "$absolutevirtualenv"
     fi
@@ -35,5 +35,6 @@ fi
 if [ ! -d "$absolutevirtualenv/lib/python2.7/site-packages/sphinx" ]
 then
     echo "Installing pip dependencies ... "
+    pip install 'setuptools==44.0.0'
     pip install -r ${SCRIPT_DIR}/requirements.txt
 fi
